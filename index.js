@@ -151,12 +151,40 @@
 // 5.9	3.0	5.1	1.8	virginica`;
 
 var dataRaw = `sepalLength	sepalWidth	petalLength	petalWidth	species
-Think	2012-02-03	1.4	0.2	setosa
-Act	2012-03-03	1.4	0.2	setosa
-Think	2012-01-03	4.7	1.4	versicolor
-Deliver	2012-05-03	4.5	1.5	versicolor
-Leadership Team Meetings	2012-02-03	5.9	2.1	virginica
-Think	2012-02-03	5.9	2.1	virginica`;
+1	2012-02-03	1.4	0.2	setosa
+1	2012-02-03	1.4	0.2	setosa
+1	2012-02-03	1.4	0.2	setosa
+1	2012-02-03	1.4	0.2	setosa
+1	2012-02-03	1.4	0.2	setosa
+1	2012-02-03	1.4	0.2	setosa
+1	2012-02-02	1.4	0.2	setosa
+1	2012-02-02	1.4	0.2	setosa
+1	2012-02-02	1.4	0.2	setosa
+3	2012-03-03	1.4	0.2	setosa
+3	2012-03-03	1.4	0.2	setosa
+3	2012-03-03	1.4	0.2	setosa
+3	2012-03-03	1.4	0.2	setosa
+3	2012-03-03	1.4	0.2	setosa
+3	2012-03-03	1.4	0.2	setosa
+3	2012-07-03	1.4	0.2	setosa
+3	2012-07-03	1.4	0.2	setosa
+3	2012-07-03	1.4	0.2	setosa
+3	2012-07-03	1.4	0.2	setosa
+3	2012-08-03	1.4	0.2	setosa
+3	2012-09-03	1.4	0.2	setosa
+3	2012-12-03	1.4	0.2	setosa
+2	2012-01-03	4.5	1.5	versicolor
+1	2012-01-03	4.7	1.4	versicolor
+2	2012-05-03	4.5	1.5	versicolor
+2	2012-05-04	4.5	1.5	versicolor
+2	2012-05-05	4.5	1.5	versicolor
+2	2012-05-06	4.5	1.5	versicolor
+2	2012-05-07	4.5	1.5	versicolor
+0	2012-02-03	5.9	2.1	virginica
+0	2012-07-03	5.9	2.1	virginica
+0	2012-02-06	5.9	2.1	virginica
+0	2012-02-23	5.9	2.1	virginica
+1	2012-02-03	5.9	2.1	virginica`;
 
 // var dataRaw = ``;
 
@@ -179,7 +207,15 @@ var margin = {top: 20, right: 20, bottom: 30, left: 80},
     padding = 1, // separation between nodes
     radius = 11,
     startDate = new Date(2012, 0, 1),
-    endDate = new Date(2013, 0, 1);
+    endDate = new Date(2013, 0, 1),
+    categories = ["Leadership Team Meetings", "Think", "Act", "Deliver"];
+
+    let ltMeetingsColor = 'gray',
+        tadColors = {
+            think: '#bd1a1a',
+            act: '#db7612',
+            deliver: '#59b0c2'
+        };
 
 var x = d3.time.scale()
     .domain([startDate, endDate])
@@ -191,9 +227,12 @@ var x = d3.time.scale()
 // var y = d3.scale.linear()
 //     .range([height, 0]);
 
-var y = d3.scale.ordinal()
-    .domain(["Deliver", "Act", "Think", "Leadership Team Meetings"])    
-    .rangeRoundBands([height, 0], .1, .3);
+var ext = d3.extent(categories, function(d) { return categories.indexOf(d); });
+var y = d3.scale.linear().domain([ext[0], ext[1] + 1]).range([0, height]);
+
+// var y = d3.scale.ordinal()
+//     .domain(["Deliver", "Act", "Think", "Leadership Team Meetings"])    
+//     .rangeRoundBands([height, 0], .1, .3);
 
 var color = d3.scale.category10();
 
@@ -210,15 +249,37 @@ var xAxis = d3.svg.axis()
 //     .scale(y)
 //     .orient("left");
     
-var yAxis = d3.svg.axis()
-    .scale(y)
-    .orient("left");
+// var yAxis = d3.svg.axis()
+//     .scale(y)
+//     .orient("left");
 
-var svg = d3.select("body").append("svg")
+var svg = d3.select(".calendarPlot").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// draw the lanes for the main chart
+svg.append('g').selectAll('.laneLines')
+.data(categories)
+.enter().append('line')
+.attr('x1', 0)
+.attr('y1', function(d) { return d3.round(y(categories.indexOf(d))) + .5; })
+.attr('x2', width)
+.attr('y2', function(d) { return d3.round(y(categories.indexOf(d))) + .5; })
+.attr('stroke', function(d) { return d === '' ? 'white' : 'lightgray' });
+
+svg.append('g').selectAll('.laneText')
+.data(categories)
+.enter().append('text')
+.text(function(d) { return d; })
+.attr('x', -10)
+.attr('y', function(d) { return y(categories.indexOf(d) + .5); })
+.attr('dy', '0.5ex')
+.attr('text-anchor', 'end')
+.attr('class', 'laneText')
+.call(wrap, 20);
+
 
 //var controls = d3.select("body").append("label")
 //    .attr("id", "controls");
@@ -234,7 +295,7 @@ var svg = d3.select("body").append("svg")
 
   data.forEach(function(d) {
     d[xVar] = new Date(d[xVar]);// +d[xVar];
-    //d[yVar] = +d[yVar];
+    d[yVar] = +d[yVar];
   });
 
   var force = d3.layout.force()
@@ -252,7 +313,7 @@ var svg = d3.select("body").append("svg")
   data.forEach(function(d) {
     d.x = x(d[xVar]);
     d.y = y(d[yVar]);
-    d.color = color(d.species);
+    d.color = color(d[yVar]); //color(d.species);
     d.radius = radius;
   });
 
@@ -267,19 +328,45 @@ var svg = d3.select("body").append("svg")
     //   .style("text-anchor", "end")
     //   .text("Sepal Width (cm)");
 
-  svg.append("g")
-      .attr("class", "y axis")
-      .call(yAxis)
-    // .append("text")
-    //   .attr("class", "label")
-    //   .attr("transform", "rotate(-90)")
-    //   .attr("y", 6)
-    //   .attr("dy", ".71em")
-    //   .style("text-anchor", "end")
-      //.text("Sepal Length (cm)")
-      .selectAll(".tick text")
-      .attr("transform", "translate(-7, 0)")
-        .call(wrap, y.rangeBand());
+//   svg.append("g")
+//       .attr("class", "y axis")
+//       .call(yAxis)
+//     // .append("text")
+//     //   .attr("class", "label")
+//     //   .attr("transform", "rotate(-90)")
+//     //   .attr("y", 6)
+//     //   .attr("dy", ".71em")
+//     //   .style("text-anchor", "end")
+//       //.text("Sepal Length (cm)")
+//       .selectAll(".tick text")
+//       .attr("transform", "translate(-7, 0)")
+//         .call(wrap, y.rangeBand());
+
+// draw top lane background color rectangle
+svg.append("g").append("path")
+.attr("d", pathBandData(0, 1))
+.style("opacity", 0.1)
+.style("stroke", ltMeetingsColor)
+.style("fill", ltMeetingsColor);
+
+// drap stage rectangles
+svg.append("g").append("path")
+.attr("d", pathBandData(1, 2))
+.style("opacity", 0.3)
+.style("stroke", tadColors.think)
+.style("fill", tadColors.think);
+
+svg.append("g").append("path")
+.attr("d", pathBandData(2, 3))
+.style("opacity", 0.3)
+.style("stroke", tadColors.act)
+.style("fill", tadColors.act);
+
+svg.append("g").append("path")
+.attr("d", pathBandData(3, 4))
+.style("opacity", 0.3)
+.style("stroke", tadColors.deliver)
+.style("fill", tadColors.deliver);
 
 var gNodes = svg.selectAll(".dot")
       .data(data)
@@ -289,7 +376,7 @@ var node = gNodes.append("circle")
       .attr("class", "dot")
       .attr("r", radius)
       .attr("cx", function(d) { return x(d[xVar]); })
-      .attr("cy", function(d) { return y(d[yVar]); })
+      .attr("cy", function(d) { return y(d[yVar]) + .5*y(1); })
       .style("fill", function(d) { return d.color; });
 
 //   var node = svg.selectAll(".dot")
@@ -310,7 +397,7 @@ var textNode = gNodes.append("text").text(function(d) {
 .style("font-weight", "bold")
 .attr("fill", "white")
 .attr("x", function(d) { return x(d[xVar])-7; })
-.attr("y", function(d) { return y(d[yVar])+2; });
+.attr("y", function(d) { return y(d[yVar]) + .5*y(1) +2; });
 
 //   var legend = svg.selectAll(".legend")
 //       .data(color.domain())
@@ -348,10 +435,10 @@ var textNode = gNodes.append("text").text(function(d) {
     //}
 
     node.attr("cx", function(d) { return d.x; })
-        .attr("cy", function(d) { return d.y; });
+        .attr("cy", function(d) { return d.y + .5*y(1); });
 
     textNode.attr("x", function(d) { return d.x-7; })
-        .attr("y", function(d) { return d.y+2; });
+        .attr("y", function(d) { return d.y + .5*y(1) +2; });
   }
 
   function moveTowardDataPosition(alpha) {
@@ -387,7 +474,20 @@ var textNode = gNodes.append("text").text(function(d) {
         return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
       });
     };
-  }
+  };
+
+  function pathBandData(yStart, yEnd) {
+    // check to see if band falls outside of the y-Axis scale, if so, return nothing
+    if (yStart > y.domain()[1] && yEnd > y.domain()[1]) {
+        return null;
+    } else // otherwise, draw the banding box. still check we don't go beyond the y-Axis scale at each point.
+    {
+        return "M" + x(x.domain()[0]) + "," + (yStart > y.domain()[1] ? y(y.domain()[1]) : y(yStart)) +
+            "L" + x(x.domain()[0]) + "," + (yEnd > y.domain()[1] ? y(y.domain()[1]) : y(yEnd)) +
+            "L" + x(x.domain()[1]) + "," + (yEnd > y.domain()[1] ? y(y.domain()[1]) : y(yEnd)) +
+            "L" + x(x.domain()[1]) + "," + (yStart > y.domain()[1] ? y(y.domain()[1]) : y(yStart));
+    }
+};
 
   function wrap(text, width) {
     text.each(function() {
@@ -396,10 +496,10 @@ var textNode = gNodes.append("text").text(function(d) {
           word,
           line = [],
           lineNumber = 0,
-          lineHeight = 1.1, // ems
+          lineHeight = 1.0, // ems
           y = text.attr("y"),
           dy = parseFloat(text.attr("dy")),
-          tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+          tspan = text.text(null).append("tspan").attr("x", -10).attr("y", y).attr("dy", dy + "em");
       while (word = words.pop()) {
         line.push(word);
         tspan.text(line.join(" "));
@@ -407,10 +507,162 @@ var textNode = gNodes.append("text").text(function(d) {
           line.pop();
           tspan.text(line.join(" "));
           line = [word];
-          tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+          tspan = text.append("tspan").attr("x", -10).attr("y", y).attr("dy", lineNumber++ * lineHeight + dy + "em").text(word);
         }
       }
     });
-  }
+  };
 
 //});
+
+
+$(document).ready(function() {
+    
+    $('#calendar').fullCalendar({
+        header: {
+            left: '',
+            center: 'title',
+            right: ''
+        },
+
+        // customize the button names,
+        // otherwise they'd all just say "list"
+        views: {
+            listDay: { buttonText: 'list day' },
+            listWeek: { buttonText: 'list week' }
+        },
+
+        defaultView: 'listYear',
+        defaultDate: '2012-05-12',
+        navLinks: true, // can click day/week names to navigate views
+        editable: true,
+        eventLimit: true, // allow "more" link when too many events
+        events: window.data.map(e => {return {
+                    title: 'Meeting',
+                    start: new Date(e[xVar]),
+                    end: new Date(e[xVar]),
+                    color: e.color
+                }})
+    });
+    
+});
+
+
+
+
+// /**
+//  * calendarDemoApp - 0.9.0
+//  */
+ var calendarDemoApp = angular.module('calendarDemoApp', ['ui.calendar', 'ui.bootstrap']);
+
+ calendarDemoApp.controller('CalendarCtrl',
+     function($scope, $compile, $timeout, uiCalendarConfig) {});
+
+// calendarDemoApp.controller('CalendarCtrl',
+//    function($scope, $compile, $timeout, uiCalendarConfig) {
+//     var date = new Date();
+//     var d = date.getDate();
+//     var m = date.getMonth();
+//     var y = date.getFullYear();
+
+//     $scope.changeTo = 'Hungarian';
+//     /* event source that pulls from google.com */
+//     $scope.eventSource = {
+//             url: "http://www.google.com/calendar/feeds/usa__en%40holiday.calendar.google.com/public/basic",
+//             className: 'gcal-event',           // an option!
+//             currentTimezone: 'America/Chicago' // an option!
+//     };
+//     /* event source that contains custom events on the scope */
+//     $scope.events =
+//     window.data.map(e => {return {
+//         title: 'Meeting',
+//         start: new Date(e[xVar]),
+//         end: new Date(e[xVar])
+//     };});
+
+//     $scope.calEventsExt = {
+//        color: '#f00',
+//        textColor: 'yellow',
+//        events: [
+//           {type:'party',title: 'Lunch',start: new Date(y, m, d, 12, 0),end: new Date(y, m, d, 14, 0),allDay: false},
+//           {type:'party',title: 'Lunch 2',start: new Date(y, m, d, 12, 0),end: new Date(y, m, d, 14, 0),allDay: false},
+//           {type:'party',title: 'Click for Google',start: new Date(y, m, 28),end: new Date(y, m, 29),url: 'http://google.com/'}
+//         ]
+//     };
+//     /* alert on eventClick */
+//     $scope.alertOnEventClick = function( date, jsEvent, view){
+//         $scope.alertMessage = (date.title + ' was clicked ');
+//     };
+//     /* alert on Drop */
+//      $scope.alertOnDrop = function(event, delta, revertFunc, jsEvent, ui, view){
+//        $scope.alertMessage = ('Event Dropped to make dayDelta ' + delta);
+//     };
+//     /* alert on Resize */
+//     $scope.alertOnResize = function(event, delta, revertFunc, jsEvent, ui, view ){
+//        $scope.alertMessage = ('Event Resized to make dayDelta ' + delta);
+//     };
+//     /* add and removes an event source of choice */
+//     $scope.addRemoveEventSource = function(sources,source) {
+//       var canAdd = 0;
+//       angular.forEach(sources,function(value, key){
+//         if(sources[key] === source){
+//           sources.splice(key,1);
+//           canAdd = 1;
+//         }
+//       });
+//       if(canAdd === 0){
+//         sources.push(source);
+//       }
+//     };
+    
+//     /* Change View */
+//     $scope.changeView = function(view,calendar) {
+//       uiCalendarConfig.calendars[calendar].fullCalendar('changeView',view);
+//     };
+//     /* Change View */
+//     $scope.renderCalendar = function(calendar) {
+//       $timeout(function() {
+//         if(uiCalendarConfig.calendars[calendar]){
+//           uiCalendarConfig.calendars[calendar].fullCalendar('render');
+//           uiCalendarConfig.calendars[calendar].fullCalendar('changeView','listYear');
+//         }
+//       });
+//     };
+//      /* Render Tooltip */
+//     $scope.eventRender = function( event, element, view ) {
+//         element.attr({'tooltip': event.title,
+//                       'tooltip-append-to-body': true});
+//         $compile(element)($scope);
+//     };
+//     /* config object */
+//     $scope.uiConfig = {
+//       calendar:{
+//         height: 450,
+//         editable: true,
+//         header:{
+//           left: 'title',
+//           center: '',
+//           right: 'today prev,next'
+//         },
+//         eventClick: $scope.alertOnEventClick,
+//         eventDrop: $scope.alertOnDrop,
+//         eventResize: $scope.alertOnResize,
+//         eventRender: $scope.eventRender
+//       }
+//     };
+
+//     $scope.changeLang = function() {
+//       if($scope.changeTo === 'Hungarian'){
+//         $scope.uiConfig.calendar.dayNames = ["Vasárnap", "Hétfő", "Kedd", "Szerda", "Csütörtök", "Péntek", "Szombat"];
+//         $scope.uiConfig.calendar.dayNamesShort = ["Vas", "Hét", "Kedd", "Sze", "Csüt", "Pén", "Szo"];
+//         $scope.changeTo= 'English';
+//       } else {
+//         $scope.uiConfig.calendar.dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+//         $scope.uiConfig.calendar.dayNamesShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+//         $scope.changeTo = 'Hungarian';
+//       }
+//     };
+//     /* event sources array*/
+//     $scope.eventSources2 = [$scope.events];
+// });
+// /* EOF */
